@@ -32,13 +32,7 @@ class BasePlotter:
         self.text_residual = new_residual
         return [line.decode('utf-8') for line in lines]
 
-    def fileno(self):
-        return self.fd
-
-    def process_lines(self, decimate=1):
-        log_strings = self.read_lines()
-        if len(log_strings) == 0:
-            return
+    def process_lines(self, log_strings, decimate=1):
         d = {}
         for s in log_strings:
             self.line_counter += 1
@@ -83,7 +77,7 @@ class BasePlotter:
         if clear:
             ax.clear()
         for y in args:
-            idxs = np.where((x >= x_first) & (x <= x_last))
+            idxs = np.where(x >= x_first)
             y["x"] = x[idxs]
             label = y["label"] if "label" in y else ""
             fmt = y["fmt"] if "fmt" in y else "-"
@@ -95,13 +89,13 @@ class BasePlotter:
 class JittPlotter(BasePlotter):
     def __init__(self, ax_):
         regexp = re.compile(
-            '^(?P<ts>\d*),\s(?P<stream_ts>\d*),\s(?P<delta_ms>[\d.]*),\s(?P<jitter_max>[\d.]*),\s(?P<jitter_min>[\d.]*)$')
+            '^[a-z],(?P<ts>[\d.]*),(?P<stream_ts>[\d.]*),(?P<delta_ms>[\d.]*),(?P<jitter_max>[\d.]*),(?P<jitter_min>[\d.]*)$')
         self.file_path = "/tmp/jitt.log"
         super().__init__(self.file_path, ax_, regexp)
 
-    def __call__(self):
+    def __call__(self, lines):
         # ts, stream ts, delta_ms, jitter_max, jitter_min
-        self.process_lines()
+        self.process_lines(lines)
 
         if self.measurements == {}:
             return
@@ -115,13 +109,13 @@ class JittPlotter(BasePlotter):
 class LatencyPlotter(BasePlotter):
     def __init__(self, ax_):
         regexp = re.compile(
-            '^(?P<ts>\d*),\s(?P<niq>\d*),\s(?P<target>[\d.]*)$')
+            '^[a-z],(?P<ts>[\d.]*),(?P<niq>[\d.]*),(?P<target>[\d.]*)$')
         self.file_path = "/tmp/tuner.log"
         super().__init__(self.file_path, ax_, regexp)
 
-    def __call__(self):
+    def __call__(self, lines):
         # ts, stream ts, delta_ms, jitter_max, jitter_min
-        self.process_lines(decimate=8)
+        self.process_lines(lines)
 
         if self.measurements == {}:
             return
@@ -134,15 +128,15 @@ class LatencyPlotter(BasePlotter):
 class FreqEstimatorPlotter(BasePlotter):
     def __init__(self, ax_):
         regexp = re.compile(
-            '^(?P<ts>\d*),\s*(?P<filtered>[\d.]*),\s*(?P<target>[\d.]*),\s*(?P<p>[-e\d.]*),\s*(?P<i>[-e\d.]*)$',
+            '^[a-z],(?P<ts>[\d.]*),(?P<filtered>[\d.]*),(?P<target>[\d.]*),(?P<p>[-e\d.]*),(?P<i>[-e\d.]*)$',
             re.MULTILINE)
         self.file_path = "/tmp/fe.log"
         self.accum_ax = ax_.twinx()
         super().__init__(self.file_path, ax_, regexp)
 
-    def __call__(self):
+    def __call__(self, lines):
         # ts, stream ts, delta_ms, jitter_max, jitter_min
-        self.process_lines()
+        self.process_lines(lines)
 
         if self.measurements == {}:
             return
