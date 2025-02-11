@@ -121,3 +121,24 @@ class FreqEstimatorPlotter(BasePlotter):
         self.update_plot(self.ts, [{"y": self.measurements["p"], "label": "P", "fmt": "k-"},
                             {"y": self.measurements["i"], "label": "I", "fmt": "r-"}],
                   ax=self.accum_ax)
+
+
+class DepacketizerPlotter(BasePlotter):
+    def __init__(self, ax_):
+        super().__init__(ax_)
+
+    def process(self, line):
+        # type, ts, missing, late, recovered
+        self.process_line({"ts": line[1],
+                           "missing": line[2],
+                           "late": line[3],
+                           "recovered": line[4]})
+
+    def replot(self):
+        if self.measurements == {}:
+            return
+
+        self.update_plot(self.ts, [
+            {"y": self.measurements["missing"] / 44100. * 1e3, "label": "Missing samples, ms"},
+            {"y": self.measurements["late"] / 44100. * 1e3, "label": "Late samples, ms"},
+            {"y": self.measurements["recovered"] / 44100. * 1e3, "label": "Recovered samples, ms"}])

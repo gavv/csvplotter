@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.style as mplstyle
 
 from logreader import LogReader
-from logplotters import JittPlotter, LatencyPlotter, FreqEstimatorPlotter
+from logplotters import JittPlotter, LatencyPlotter, FreqEstimatorPlotter, DepacketizerPlotter
 
 if __name__ == '__main__':
     reader = LogReader(sys.argv[1])
@@ -27,11 +27,13 @@ if __name__ == '__main__':
     fig = plt.figure()
     fig.canvas.mpl_connect('close_event', die)
 
-    ax1 = fig.add_subplot(311)
-    ax2 = fig.add_subplot(312)
-    ax3 = fig.add_subplot(313)
+    ax1 = fig.add_subplot(411)
+    ax2 = fig.add_subplot(412)
+    ax3 = fig.add_subplot(413)
+    ax4 = fig.add_subplot(414)
 
-    plotters = {'f': [FreqEstimatorPlotter(ax3), 0],
+    plotters = {'d': [DepacketizerPlotter(ax4), 0],
+                'f': [FreqEstimatorPlotter(ax3), 0],
                 't': [LatencyPlotter(ax2), 0],
                 'm': [JittPlotter(ax1), 0]}
 
